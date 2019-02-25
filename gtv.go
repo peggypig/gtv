@@ -19,6 +19,7 @@ func Validator(table Table) (err error) {
 	return
 }
 
+
 func validator(field IField) (err error) {
 	if field != nil {
 		if field.IsTableField() {

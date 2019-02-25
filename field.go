@@ -12,6 +12,7 @@ type IField interface {
 	IsTableField() bool
 	GetFieldName() string
 	GetFieldValue() interface{}
+	SetFieldValue(interface{})
 	GetValidators() []IValidator
 	GetFields() []IField
 }
@@ -32,6 +33,10 @@ func (field *ValueField) GetFieldName() string {
 
 func (field *ValueField) GetFieldValue() interface{} {
 	return field.FieldValue
+}
+
+func (field *ValueField) SetFieldValue(v interface{}) {
+	field.FieldValue = v
 }
 
 func (field *ValueField) GetValidators() []IValidator {
@@ -56,6 +61,9 @@ func (field *TableField) GetFieldName() string {
 
 func (field *TableField) GetFieldValue() interface{} {
 	return nil
+}
+
+func (field *TableField) SetFieldValue(v interface{}) {
 }
 
 func (field *TableField) GetValidators() []IValidator {
