@@ -2,11 +2,11 @@ package gtv
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
-	"reflect"
 	"testing"
 )
 
@@ -70,11 +70,11 @@ func TestValidator(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-type fakeHttpResponseBody struct {
+type fakeHttpBody struct {
 	body io.ReadSeeker
 }
 
-func (body *fakeHttpResponseBody) Read(p []byte) (n int, err error) {
+func (body *fakeHttpBody) Read(p []byte) (n int, err error) {
 	n, err = body.body.Read(p)
 	if err == io.EOF {
 		body.body.Seek(0, 0)
@@ -82,12 +82,12 @@ func (body *fakeHttpResponseBody) Read(p []byte) (n int, err error) {
 	return n, err
 }
 
-func (body *fakeHttpResponseBody) Close() error {
+func (body *fakeHttpBody) Close() error {
 	return nil
 }
 func TestTable_FillTable_Body(t *testing.T) {
 	request := &http.Request{
-		Body:   &fakeHttpResponseBody{bytes.NewReader([]byte(`Name=zhangSan&Age=12`))},
+		Body:   &fakeHttpBody{bytes.NewReader([]byte(`Name=zhangSan&Age=12`))},
 		Method: "POST",
 		Header: map[string][]string{
 			"Content-Type": []string{"application/x-www-form-urlencoded"},
@@ -121,7 +121,7 @@ func TestTable_FillTable_Body(t *testing.T) {
 
 func TestTable_FillTable_JSON(t *testing.T) {
 	request := &http.Request{
-		Body: &fakeHttpResponseBody{bytes.NewReader([]byte(`{
+		Body: &fakeHttpBody{bytes.NewReader([]byte(`{
 "Name":"zhangSan",
 "Age":10,
 "Class":{
@@ -134,12 +134,12 @@ func TestTable_FillTable_JSON(t *testing.T) {
 ],
 "Phones":[
 	{
-	"PhoneNum":null,
-	"PhoneText":null
+	"PhoneNum":"110",
+	"PhoneText":"110"
 	},
 	{
-	"PhoneNum":null,
-	"PhoneText":null
+	"PhoneNum":"119",
+	"PhoneText":"119"
 	}
 ]
 }`))},
@@ -166,12 +166,15 @@ func TestTable_FillTable_JSON(t *testing.T) {
 				FieldName: "Likes",
 				Field: &ValueField{
 					FieldName: "Likes",
+					Validators: []IValidator{
+						NewStringValidator().MaxELen(5),
+					},
 				},
 			},
 			&SliceField{
 				FieldName: "Phones",
 				Field: &TableField{
-					FieldName:"Phone",
+					FieldName: "Phone",
 					Fields: []IField{
 						&ValueField{
 							FieldName: "PhoneNum",
@@ -181,6 +184,7 @@ func TestTable_FillTable_JSON(t *testing.T) {
 						},
 					},
 				},
+				Validator:NewSliceValidator().MaxLen(3),
 			},
 			&TableField{
 				FieldName: "Class",
@@ -208,12 +212,22 @@ func TestTable_FillTable_JSON(t *testing.T) {
 			"ClassNo":   12,
 			"ClassName": "class",
 		},
-		"Likes": []string{
+		"Likes": []interface{}{
 			"Ping",
 			"Dance",
 		},
+		"Phones": []map[string]interface{}{
+			map[string]interface{}{
+				"PhoneNum":  "110",
+				"PhoneText": "110",
+			},
+			map[string]interface{}{
+				"PhoneNum":  "119",
+				"PhoneText": "119",
+			},
+		},
 	}
-	fmt.Printf("%+v\n",requestValues)
-	fmt.Println(target)
-	fmt.Println(reflect.TypeOf(requestValues["Phones"]))
+	requestValuesJson, _ := json.Marshal(requestValues)
+	targetJson, _ := json.Marshal(target)
+	assert.Equal(t, requestValuesJson, targetJson)
 }

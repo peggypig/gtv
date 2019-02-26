@@ -22,3 +22,7 @@ func NewStringValidator() (validator *validators.StringValidator) {
 func NewFloat64Validator() (validator *validators.Float64Validator) {
 	return &validators.Float64Validator{}
 }
+
+func NewSliceValidator() (validator *validators.SliceValidator) {
+	return &validators.SliceValidator{}
+}
