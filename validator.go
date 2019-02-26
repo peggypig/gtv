@@ -1,6 +1,6 @@
 package gtv
 
-import "gtv/validators"
+import "github.com/peggypig/gtv/validators"
 
 /**
 *
