@@ -18,3 +18,7 @@ func NewIntValidator() (validator *validators.IntValidator) {
 func NewStringValidator() (validator *validators.StringValidator) {
 	return &validators.StringValidator{}
 }
+
+func NewFloat64Validator() (validator *validators.Float64Validator) {
+	return &validators.Float64Validator{}
+}

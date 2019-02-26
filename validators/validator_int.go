@@ -7,13 +7,14 @@ import (
 
 /**
 *
-* @description : 
+* @description :
 *
 * @author : codezhang
 *
 * @create : 2019-02-25 18:59
 **/
 type IntValidator struct {
+	required bool
 	min      int
 	boolMin  bool
 	minE     int
@@ -26,12 +27,19 @@ type IntValidator struct {
 
 func (iv *IntValidator) Validator(fieldName string, value interface{}) error {
 	var err error
-	if intValue, ok := value.(int); ok {
+	if strValue, ok := value.(string); ok {
+		if iv.required && len(strValue) <= 0 {
+			err = errors.New(fieldName + "'s value is required")
+		} else {
+			value, err = strconv.Atoi(strValue)
+		}
+	}
+	if intValue, ok := value.(int); err == nil && ok {
 		if iv.boolMin && intValue <= iv.min {
 			err = errors.New(fieldName + "'s value should > " + strconv.Itoa(iv.min))
 		}
 		if err == nil && iv.boolMinE && intValue < iv.minE {
-			err = errors.New(fieldName + "'s value should >= " + strconv.Itoa(iv.min))
+			err = errors.New(fieldName + "'s value should >= " + strconv.Itoa(iv.minE))
 		}
 		if err == nil && iv.boolMax && intValue >= iv.max {
 			err = errors.New(fieldName + "'s value should < " + strconv.Itoa(iv.max))
@@ -43,6 +51,11 @@ func (iv *IntValidator) Validator(fieldName string, value interface{}) error {
 		err = errors.New("data type is not int:" + fieldName)
 	}
 	return err
+}
+
+func (iv *IntValidator) Required() *IntValidator {
+	iv.required = true
+	return iv
 }
 
 func (iv *IntValidator) Min(min int) *IntValidator {

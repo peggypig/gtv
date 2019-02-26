@@ -1,26 +1,16 @@
-package gtv
+## Go Table Validator
 
-import (
-	"bytes"
-	"fmt"
-	"github.com/stretchr/testify/assert"
-	"io"
-	"net/http"
-	"testing"
-)
+    表验证器，用于参数合法性校验。  
+    基本思想是把model转化成表（Table，包含多个Field，每个Field又包含FieldName,  
+    FieldValue,Validators三个属性），最终对参数表进行校验。
+    没有使用反射！没有使用反射！没有使用反射！
+        
+    
+#### quick start
 
-/**
-*
-* @description :
-*
-* @author : codezhang
-*
-* @create : 2019-02-25 19:38
-**/
-
-func TestValidator(t *testing.T) {
-
-	err := Validator(Table{
+方式一：  
+```go
+    err := Validator(Table{
 		[]IField{
 			&ValueField{
 				FieldName:  "Name",
@@ -66,33 +56,11 @@ func TestValidator(t *testing.T) {
 		},
 	})
 	fmt.Println(err)
-	assert.NotNil(t, err)
-}
+```
 
-type fakeHttpResponseBody struct {
-	body io.ReadSeeker
-}
-
-func (body *fakeHttpResponseBody) Read(p []byte) (n int, err error) {
-	n, err = body.body.Read(p)
-	if err == io.EOF {
-		body.body.Seek(0, 0)
-	}
-	return n, err
-}
-
-func (body *fakeHttpResponseBody) Close() error {
-	return nil
-}
-func TestTable_FillTable(t *testing.T) {
-	request := &http.Request{
-		Body:   &fakeHttpResponseBody{bytes.NewReader([]byte(`Name=zhangSan&Age=12`))},
-		Method: "POST",
-		Header: map[string][]string{
-			"Content-Type": []string{"application/x-www-form-urlencoded"},
-		},
-	}
-	table := Table{
+方式二：
+```go
+    table := Table{
 		Fields: []IField{
 			&ValueField{
 				FieldName: "Name",
@@ -110,10 +78,15 @@ func TestTable_FillTable(t *testing.T) {
 	}
 	err, requestValues := table.FillTable(request)
 	err = Validator(table)
-	fmt.Println(err)
-	assert.Nil(t, err)
-	assert.Equal(t, map[string]string{
-		"Name": "zhangSan",
-		"Age":  "12",
-	}, requestValues)
-}
+```
+这个调用方式主要是简化了用户构造Table的操作，可以在构造出基本的表结构后，通过   
+FillTable将http.request传入，表填充器将根据表的FieldName和请求参数的Key进行比对，  
+将Value填充到表中。
+
+#### Extra
+1. 目前自带支持的校验器有：
+    - StringValidator
+    - IntValidator
+    - Float64Validator
+2. 在自带校验器不满足需求时，可以自定义校验器，实现IValidator接口即可。
+    
