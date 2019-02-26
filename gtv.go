@@ -19,22 +19,23 @@ func Validator(table Table) (err error) {
 	return
 }
 
-
 func validator(field IField) (err error) {
 	if field != nil {
-		if field.IsTableField() {
-			for _, v := range field.GetFields() {
+		if tableField, ok := field.(*TableField); ok {
+			for _, v := range tableField.GetFields() {
 				err = validator(v)
 				if err != nil {
 					break
 				}
 			}
 		} else {
-			validators := field.GetValidators()
-			for _, v := range validators {
-				err = v.Validator(field.GetFieldName(), field.GetFieldValue())
-				if err != nil {
-					break
+			if err == nil {
+				validators := field.GetValidators()
+				for _, v := range validators {
+					err = v.Validator(field.GetFieldName(), field.GetFieldValue())
+					if err != nil {
+						break
+					}
 				}
 			}
 		}

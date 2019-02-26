@@ -28,7 +28,16 @@ type Float64Validator struct {
 
 func (fv *Float64Validator) Validator(fieldName string, value interface{}) error {
 	var err error
-	if strValue, ok := value.(string); ok {
+	if value == nil {
+		err = errors.New(fieldName + "'s value is nil")
+	}
+	if float64SliceValue, ok := value.([]float64); err == nil && ok {
+		value = float64SliceValue[0]
+	}
+	if strSliceValue, ok := value.([]string); err == nil && ok {
+		value = strSliceValue[0]
+	}
+	if strValue, ok := value.(string); err == nil && ok {
 		if fv.required && len(strValue) <= 0 {
 			err = errors.New(fieldName + "'s value is required")
 		} else {

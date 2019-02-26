@@ -31,7 +31,16 @@ type StringValidator struct {
 
 func (sv *StringValidator) Validator(fieldName string, value interface{}) error {
 	var err error
-	if strValue, ok := value.(string); ok {
+	if value == nil {
+		err = errors.New(fieldName + "'s value is nil")
+	}
+	if strSliceValue, ok := value.([]string); err == nil && ok {
+		value = strSliceValue[0]
+	}
+	if intSliceValue, ok := value.([]int); err == nil && ok {
+		value = strconv.Itoa(intSliceValue[0])
+	}
+	if strValue, ok := value.(string); err == nil && ok {
 		if sv.required && len(strValue) <= 0 {
 			err = errors.New(fieldName + "'s value is required")
 		}

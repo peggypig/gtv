@@ -9,7 +9,7 @@ package gtv
 * @create : 2019-02-25 18:34
 **/
 type IField interface {
-	IsTableField() bool
+	//IsTableField() bool
 	GetFieldName() string
 	GetFieldValue() interface{}
 	SetFieldValue(interface{})
@@ -23,9 +23,9 @@ type ValueField struct {
 	Validators []IValidator
 }
 
-func (field *ValueField) IsTableField() bool {
-	return false
-}
+//func (field *ValueField) IsTableField() bool {
+//	return false
+//}
 
 func (field *ValueField) GetFieldName() string {
 	return field.FieldName
@@ -48,22 +48,25 @@ func (field *ValueField) GetFields() []IField {
 }
 
 type TableField struct {
-	Fields []IField
+	FieldName  string
+	FieldValue interface{}
+	Fields     []IField
 }
 
-func (field *TableField) IsTableField() bool {
-	return true
-}
+//func (field *TableField) IsTableField() bool {
+//	return true
+//}
 
 func (field *TableField) GetFieldName() string {
-	return ""
+	return field.FieldName
 }
 
 func (field *TableField) GetFieldValue() interface{} {
-	return nil
+	return field.GetFieldValue()
 }
 
 func (field *TableField) SetFieldValue(v interface{}) {
+	field.FieldValue = v
 }
 
 func (field *TableField) GetValidators() []IValidator {
@@ -72,4 +75,28 @@ func (field *TableField) GetValidators() []IValidator {
 
 func (field *TableField) GetFields() []IField {
 	return field.Fields
+}
+
+type SliceField struct {
+	FieldName string
+	Field     IField
+}
+
+func (field *SliceField) GetFieldName() string {
+	return field.FieldName
+}
+
+func (field *SliceField) GetFieldValue() interface{} {
+	return nil
+}
+
+func (field *SliceField) SetFieldValue(v interface{}) {
+}
+
+func (field *SliceField) GetValidators() []IValidator {
+	return nil
+}
+
+func (field *SliceField) GetFields() []IField {
+	return []IField{field.Field}
 }

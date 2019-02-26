@@ -27,12 +27,25 @@ type IntValidator struct {
 
 func (iv *IntValidator) Validator(fieldName string, value interface{}) error {
 	var err error
-	if strValue, ok := value.(string); ok {
+	if value == nil {
+		err = errors.New(fieldName + "'s value is nil")
+	}
+	if intSliceValue, ok := value.([]int); err == nil && ok {
+		value = intSliceValue[0]
+	}
+	if strSliceValue, ok := value.([]string); err == nil && ok {
+		value = strSliceValue[0]
+	}
+	if strValue, ok := value.(string); err == nil && ok {
 		if iv.required && len(strValue) <= 0 {
 			err = errors.New(fieldName + "'s value is required")
 		} else {
 			value, err = strconv.Atoi(strValue)
 		}
+	}
+	// json中只有float64
+	if float64Value, ok := value.(float64); err == nil && ok {
+		value = int(float64Value)
 	}
 	if intValue, ok := value.(int); err == nil && ok {
 		if iv.boolMin && intValue <= iv.min {

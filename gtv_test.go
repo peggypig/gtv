@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
+	"reflect"
 	"testing"
 )
 
@@ -42,7 +43,7 @@ func TestValidator(t *testing.T) {
 				},
 			},
 			&TableField{
-				[]IField{
+				Fields: []IField{
 					&ValueField{
 						FieldName:  "Like",
 						FieldValue: "ping pang",
@@ -51,7 +52,7 @@ func TestValidator(t *testing.T) {
 						},
 					},
 					&TableField{
-						[]IField{
+						Fields: []IField{
 							&ValueField{
 								FieldName:  "LikeType",
 								FieldValue: "desktop",
@@ -84,7 +85,7 @@ func (body *fakeHttpResponseBody) Read(p []byte) (n int, err error) {
 func (body *fakeHttpResponseBody) Close() error {
 	return nil
 }
-func TestTable_FillTable(t *testing.T) {
+func TestTable_FillTable_Body(t *testing.T) {
 	request := &http.Request{
 		Body:   &fakeHttpResponseBody{bytes.NewReader([]byte(`Name=zhangSan&Age=12`))},
 		Method: "POST",
@@ -96,24 +97,123 @@ func TestTable_FillTable(t *testing.T) {
 		Fields: []IField{
 			&ValueField{
 				FieldName: "Name",
-				Validators:[]IValidator{
+				Validators: []IValidator{
 					NewStringValidator().Required(),
 				},
 			},
 			&ValueField{
 				FieldName: "Age",
-				Validators:[]IValidator{
+				Validators: []IValidator{
 					NewIntValidator().Max(20),
 				},
 			},
 		},
 	}
-	err, requestValues := table.FillTable(request)
+	requestValues, err := table.FillTable(request)
 	err = Validator(table)
 	fmt.Println(err)
 	assert.Nil(t, err)
-	assert.Equal(t, map[string]string{
-		"Name": "zhangSan",
-		"Age":  "12",
+	assert.Equal(t, map[string]interface{}{
+		"Name": []string{"zhangSan"},
+		"Age":  []string{"12"},
 	}, requestValues)
+}
+
+func TestTable_FillTable_JSON(t *testing.T) {
+	request := &http.Request{
+		Body: &fakeHttpResponseBody{bytes.NewReader([]byte(`{
+"Name":"zhangSan",
+"Age":10,
+"Class":{
+	"ClassNo":12,
+	"ClassName":"class"
+},
+"Likes":[
+"Ping",
+"Dance"
+],
+"Phones":[
+	{
+	"PhoneNum":null,
+	"PhoneText":null
+	},
+	{
+	"PhoneNum":null,
+	"PhoneText":null
+	}
+]
+}`))},
+		Method: "POST",
+		Header: map[string][]string{
+			"Content-Type": []string{"application/json"},
+		},
+	}
+	table := Table{
+		Fields: []IField{
+			&ValueField{
+				FieldName: "Name",
+				Validators: []IValidator{
+					NewStringValidator().Required(),
+				},
+			},
+			&ValueField{
+				FieldName: "Age",
+				Validators: []IValidator{
+					NewIntValidator().Max(20),
+				},
+			},
+			&SliceField{
+				FieldName: "Likes",
+				Field: &ValueField{
+					FieldName: "Likes",
+				},
+			},
+			&SliceField{
+				FieldName: "Phones",
+				Field: &TableField{
+					FieldName:"Phone",
+					Fields: []IField{
+						&ValueField{
+							FieldName: "PhoneNum",
+						},
+						&ValueField{
+							FieldName: "PhoneText",
+						},
+					},
+				},
+			},
+			&TableField{
+				FieldName: "Class",
+				Fields: []IField{
+					&ValueField{
+						FieldName: "ClassName",
+					},
+					&ValueField{
+						FieldName: "ClassNo",
+						Validators: []IValidator{
+							NewIntValidator().Max(20).Min(1),
+						},
+					},
+				},
+			},
+		},
+	}
+	requestValues, err := table.FillTable(request)
+	err = Validator(table)
+	assert.Nil(t, err)
+	target := map[string]interface{}{
+		"Name": "zhangSan",
+		"Age":  10,
+		"Class": map[string]interface{}{
+			"ClassNo":   12,
+			"ClassName": "class",
+		},
+		"Likes": []string{
+			"Ping",
+			"Dance",
+		},
+	}
+	fmt.Printf("%+v\n",requestValues)
+	fmt.Println(target)
+	fmt.Println(reflect.TypeOf(requestValues["Phones"]))
 }
