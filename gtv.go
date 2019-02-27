@@ -1,6 +1,7 @@
 package gtv
 
 import (
+	"github.com/peggypig/gtv/gerror"
 	"reflect"
 )
 
@@ -13,17 +14,17 @@ import (
 * @create : 2019-02-25 18:31
 **/
 
-func Validator(table Table) (err error) {
+func Validator(table Table) (err *gerror.GError) {
 	for _, field := range table.Fields {
 		err = validator(field)
-		if err != nil {
+		if !reflect.ValueOf(err).IsNil() {
 			break
 		}
 	}
 	return
 }
 
-func validator(field IField) (err error) {
+func validator(field IField) (err  *gerror.GError) {
 	if field != nil {
 		switch reflect.TypeOf(field).String() {
 		case "*gtv.ValueField":
@@ -37,7 +38,7 @@ func validator(field IField) (err error) {
 	return
 }
 
-func validatorSliceField(field IField) (err error) {
+func validatorSliceField(field IField) (err  *gerror.GError) {
 	sliceField := field.(*SliceField)
 	sliceFieldValue := sliceField.FieldValue
 	if sliceField.Validator != nil {
@@ -56,22 +57,28 @@ func validatorSliceField(field IField) (err error) {
 	return
 }
 
-func validatorTableFieldOfSliceField(sonOfSliceField IField) (err error) {
+func validatorTableFieldOfSliceField(sonOfSliceField IField) (err  *gerror.GError) {
 	err = validatorTableField(sonOfSliceField)
 	return
 }
 
-func validatorValueFieldOfSliceField(sonOfSliceField IField, sliceFieldValue []interface{}) (err error) {
+func validatorValueFieldOfSliceField(sonOfSliceField IField, sliceFieldValue []interface{}) (err  *gerror.GError) {
 	validators := sonOfSliceField.GetValidators()
 	for _, value := range sliceFieldValue {
 		for _, vd := range validators {
 			err = vd.Validator(sonOfSliceField.GetFieldName(), value)
+			if err != nil {
+				break
+			}
+		}
+		if err != nil {
+			break
 		}
 	}
 	return
 }
 
-func validatorValueField(field IField) (err error) {
+func validatorValueField(field IField) (err  *gerror.GError) {
 	validators := field.GetValidators()
 	for _, v := range validators {
 		err = v.Validator(field.GetFieldName(), field.GetFieldValue())
@@ -82,7 +89,7 @@ func validatorValueField(field IField) (err error) {
 	return
 }
 
-func validatorTableField(field IField) (err error) {
+func validatorTableField(field IField) (err  *gerror.GError) {
 	tableField := field.(*TableField)
 	tableFieldValue := tableField.FieldValue
 	for _, v := range tableField.GetFields() {

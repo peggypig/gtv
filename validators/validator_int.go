@@ -25,8 +25,8 @@ type IntValidator struct {
 	boolMaxE bool
 }
 
-func (iv *IntValidator) Validator(fieldName string, value interface{}) error {
-	var err = &gerror.GError{
+func (iv *IntValidator) Validator(fieldName string, value interface{})  *gerror.GError {
+	var err  = &gerror.GError{
 		Key:   fieldName,
 		Value: value,
 	}
@@ -34,44 +34,57 @@ func (iv *IntValidator) Validator(fieldName string, value interface{}) error {
 		err.Msg = "value is nil"
 	}
 	dataTypeFlag := false
-	if intSliceValue, ok := value.([]int); err.IsNull() && ok {
-		dataTypeFlag = true
-		value = intSliceValue[0]
+	if err.IsNull() {
+		if intSliceValue, ok := value.([]int); ok {
+			dataTypeFlag = true
+			value = intSliceValue[0]
+		}
 	}
-	if strSliceValue, ok := value.([]string); err.IsNull() && ok {
-		value = strSliceValue[0]
+	if err.IsNull() {
+		if strSliceValue, ok := value.([]string); ok {
+			value = strSliceValue[0]
+		}
 	}
-	if strValue, ok := value.(string); err.IsNull() && ok {
-		if iv.required && len(strValue) <= 0 {
-			err.Msg = "value is required"
-		} else {
-			valueTemp, errTemp := strconv.Atoi(strValue)
-			if errTemp != nil {
-				err.Msg = "data type is not int"
+
+	if err.IsNull() {
+		if strValue, ok := value.(string); ok {
+			if iv.required && len(strValue) <= 0 {
+				err.Msg = "value is required"
 			} else {
-				dataTypeFlag = true
-				value = valueTemp
+				valueTemp, errTemp := strconv.Atoi(strValue)
+				if errTemp != nil {
+					err.Msg = "data type is not int"
+				} else {
+					dataTypeFlag = true
+					value = valueTemp
+				}
 			}
 		}
 	}
+
 	// json中只有float64
-	if float64Value, ok := value.(float64); err.IsNull() && ok {
-		dataTypeFlag = true
-		value = int(float64Value)
+	if err.IsNull() {
+		if float64Value, ok := value.(float64); ok {
+			dataTypeFlag = true
+			value = int(float64Value)
+		}
 	}
-	if intValue, ok := value.(int); err.IsNull() && ok {
-		dataTypeFlag = true
-		if iv.boolMin && intValue <= iv.min {
-			err.Msg = "value should > " + strconv.Itoa(iv.min)
-		}
-		if err.IsNull() && iv.boolMinE && intValue < iv.minE {
-			err.Msg = "value should >= " + strconv.Itoa(iv.minE)
-		}
-		if err.IsNull() && iv.boolMax && intValue >= iv.max {
-			err.Msg = "value should < " + strconv.Itoa(iv.max)
-		}
-		if err.IsNull() && iv.boolMaxE && intValue > iv.maxE {
-			err.Msg = "value should <= " + strconv.Itoa(iv.maxE)
+
+	if err.IsNull() {
+		if intValue, ok := value.(int); ok {
+			dataTypeFlag = true
+			if iv.boolMin && intValue <= iv.min {
+				err.Msg = "value should > " + strconv.Itoa(iv.min)
+			}
+			if err.IsNull() && iv.boolMinE && intValue < iv.minE {
+				err.Msg = "value should >= " + strconv.Itoa(iv.minE)
+			}
+			if err.IsNull() && iv.boolMax && intValue >= iv.max {
+				err.Msg = "value should < " + strconv.Itoa(iv.max)
+			}
+			if err.IsNull() && iv.boolMaxE && intValue > iv.maxE {
+				err.Msg = "value should <= " + strconv.Itoa(iv.maxE)
+			}
 		}
 	}
 	if !dataTypeFlag && err.IsNull() {

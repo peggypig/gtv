@@ -26,3 +26,7 @@ func NewFloat64Validator() (validator *validators.Float64Validator) {
 func NewSliceValidator() (validator *validators.SliceValidator) {
 	return &validators.SliceValidator{}
 }
+
+func NewEnumValidator() (validator *validators.EnumValidator) {
+	return &validators.EnumValidator{}
+}

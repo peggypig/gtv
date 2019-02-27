@@ -26,7 +26,7 @@ type SliceValidator struct {
 	boolMaxELen bool
 }
 
-func (sv *SliceValidator) Validator(fieldName string, value interface{}) error {
+func (sv *SliceValidator) Validator(fieldName string, value interface{})  *gerror.GError {
 	var err = &gerror.GError{
 		Key:   fieldName,
 		Value: value,
@@ -35,26 +35,31 @@ func (sv *SliceValidator) Validator(fieldName string, value interface{}) error {
 		err.Msg = "value is nil"
 	}
 	var sliceFlag = false
-	if sliceValue, ok := value.([]interface{}); err.IsNull() && ok {
-		sliceFlag = true
-		if err.IsNull() && sv.required && len(sliceValue) <= 0 {
-			err.Msg = "value is required"
-		}
-		if err.IsNull() && sv.boolMinLen && len(sliceValue) <= sv.minLen {
-			err.Msg = "value's len should > " + strconv.Itoa(sv.minLen)
-		}
-		if err.IsNull() && sv.boolMinELen && len(sliceValue) < sv.minELen {
-			err.Msg = "value's len should >= " + strconv.Itoa(sv.minELen)
-		}
-		if err.IsNull() && sv.boolMaxLen && len(sliceValue) >= sv.maxLen {
-			err.Msg = "value's len should < " + strconv.Itoa(sv.maxLen)
-		}
-		if err.IsNull() && sv.boolMaxELen && len(sliceValue) > sv.maxELen {
-			err.Msg = "value's len should <= " + strconv.Itoa(sv.maxELen)
+	if err.IsNull() {
+		if sliceValue, ok := value.([]interface{}); ok {
+			sliceFlag = true
+			if err.IsNull() && sv.required && len(sliceValue) <= 0 {
+				err.Msg = "value is required"
+			}
+			if err.IsNull() && sv.boolMinLen && len(sliceValue) <= sv.minLen {
+				err.Msg = "value's len should > " + strconv.Itoa(sv.minLen)
+			}
+			if err.IsNull() && sv.boolMinELen && len(sliceValue) < sv.minELen {
+				err.Msg = "value's len should >= " + strconv.Itoa(sv.minELen)
+			}
+			if err.IsNull() && sv.boolMaxLen && len(sliceValue) >= sv.maxLen {
+				err.Msg = "value's len should < " + strconv.Itoa(sv.maxLen)
+			}
+			if err.IsNull() && sv.boolMaxELen && len(sliceValue) > sv.maxELen {
+				err.Msg = "value's len should <= " + strconv.Itoa(sv.maxELen)
+			}
 		}
 	}
 	if !sliceFlag {
 		err.Msg = "data type is not slice"
+	}
+	if err.IsNull() {
+		err = nil
 	}
 	return err
 }

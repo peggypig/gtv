@@ -1,5 +1,7 @@
 package gtv
 
+import "github.com/peggypig/gtv/gerror"
+
 /**
 *
 * @description :
@@ -10,5 +12,5 @@ package gtv
 **/
 
 type IValidator interface {
-	Validator(fieldName string, value interface{}) error
+	Validator(fieldName string, value interface{})  *gerror.GError
 }

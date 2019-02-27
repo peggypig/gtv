@@ -26,7 +26,7 @@ type Float64Validator struct {
 	boolMaxE bool
 }
 
-func (fv *Float64Validator) Validator(fieldName string, value interface{}) error {
+func (fv *Float64Validator) Validator(fieldName string, value interface{})  *gerror.GError {
 	var err = &gerror.GError{
 		Value: value,
 		Key:   fieldName,
@@ -35,41 +35,51 @@ func (fv *Float64Validator) Validator(fieldName string, value interface{}) error
 		err.Msg = "value is nil"
 	}
 	dataTypeFlag := false
-	if float64SliceValue, ok := value.([]float64); err.IsNull() && ok {
-		dataTypeFlag = true
-		value = float64SliceValue[0]
+	if err.IsNull() {
+		if float64SliceValue, ok := value.([]float64); ok {
+			dataTypeFlag = true
+			value = float64SliceValue[0]
+		}
 	}
-	if strSliceValue, ok := value.([]string); err.IsNull() && ok {
-		value = strSliceValue[0]
+	if err.IsNull() {
+		if strSliceValue, ok := value.([]string); ok {
+			value = strSliceValue[0]
+		}
 	}
-	if strValue, ok := value.(string); err.IsNull() && ok {
-		if fv.required && len(strValue) <= 0 {
-			err.Msg = "value is required"
-		} else {
-			valueTemp, errTemp := strconv.ParseFloat(strValue, 64)
-			if errTemp != nil {
-				err.Msg = "data type is not float64"
+	if err.IsNull() {
+		if strValue, ok := value.(string); ok {
+			if fv.required && len(strValue) <= 0 {
+				err.Msg = "value is required"
 			} else {
-				dataTypeFlag = true
-				value = valueTemp
+				valueTemp, errTemp := strconv.ParseFloat(strValue, 64)
+				if errTemp != nil {
+					err.Msg = "data type is not float64"
+				} else {
+					dataTypeFlag = true
+					value = valueTemp
+				}
 			}
 		}
 	}
-	if float64Value, ok := value.(float64); err.IsNull() && ok {
-		dataTypeFlag = true
-		if fv.boolMin && float64Value <= fv.min {
-			err.Msg = "value should > " + strconv.FormatFloat(fv.min, 'f', -1, 64)
-		}
-		if err.IsNull() && fv.boolMinE && float64Value < fv.minE {
-			err.Msg = "value should >= " + strconv.FormatFloat(fv.minE, 'f', -1, 64)
-		}
-		if err.IsNull() && fv.boolMax && float64Value >= fv.max {
-			err.Msg = "value should < " + strconv.FormatFloat(fv.max, 'f', -1, 64)
-		}
-		if err.IsNull() && fv.boolMaxE && float64Value > fv.maxE {
-			err.Msg = "value should <= " + strconv.FormatFloat(fv.maxE, 'f', -1, 64)
+
+	if err.IsNull() {
+		if float64Value, ok := value.(float64); ok {
+			dataTypeFlag = true
+			if fv.boolMin && float64Value <= fv.min {
+				err.Msg = "value should > " + strconv.FormatFloat(fv.min, 'f', -1, 64)
+			}
+			if err.IsNull() && fv.boolMinE && float64Value < fv.minE {
+				err.Msg = "value should >= " + strconv.FormatFloat(fv.minE, 'f', -1, 64)
+			}
+			if err.IsNull() && fv.boolMax && float64Value >= fv.max {
+				err.Msg = "value should < " + strconv.FormatFloat(fv.max, 'f', -1, 64)
+			}
+			if err.IsNull() && fv.boolMaxE && float64Value > fv.maxE {
+				err.Msg = "value should <= " + strconv.FormatFloat(fv.maxE, 'f', -1, 64)
+			}
 		}
 	}
+
 	if !dataTypeFlag && err.IsNull() {
 		err.Msg = "data type is not float64"
 	}

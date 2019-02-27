@@ -154,6 +154,7 @@ func TestTable_FillTable_JSON(t *testing.T) {
 				FieldName: "Name",
 				Validators: []IValidator{
 					NewStringValidator().Required(),
+					NewEnumValidator().Enum([]string{"zhangSan", "lisi"}),
 				},
 			},
 			&ValueField{
@@ -168,6 +169,7 @@ func TestTable_FillTable_JSON(t *testing.T) {
 					FieldName: "Likes",
 					Validators: []IValidator{
 						NewStringValidator().MaxELen(5),
+						NewEnumValidator().Enum([]string{"ping", "Dance"}).CaseCap(false),
 					},
 				},
 			},
@@ -184,7 +186,7 @@ func TestTable_FillTable_JSON(t *testing.T) {
 						},
 					},
 				},
-				Validator:NewSliceValidator().MaxLen(3),
+				Validator: NewSliceValidator().MaxLen(3),
 			},
 			&TableField{
 				FieldName: "Class",
@@ -195,7 +197,7 @@ func TestTable_FillTable_JSON(t *testing.T) {
 					&ValueField{
 						FieldName: "ClassNo",
 						Validators: []IValidator{
-							NewIntValidator().Max(20).Min(12),
+							NewIntValidator().Max(20).Min(2),
 						},
 					},
 				},
