@@ -1,7 +1,7 @@
 package validators
 
 import (
-	"errors"
+	"github.com/peggypig/gtv/gerror"
 	"strconv"
 )
 
@@ -26,42 +26,59 @@ type IntValidator struct {
 }
 
 func (iv *IntValidator) Validator(fieldName string, value interface{}) error {
-	var err error
-	if value == nil {
-		err = errors.New(fieldName + "'s value is nil")
+	var err = &gerror.GError{
+		Key:   fieldName,
+		Value: value,
 	}
-	if intSliceValue, ok := value.([]int); err == nil && ok {
+	if value == nil {
+		err.Msg = "value is nil"
+	}
+	dataTypeFlag := false
+	if intSliceValue, ok := value.([]int); err.IsNull() && ok {
+		dataTypeFlag = true
 		value = intSliceValue[0]
 	}
-	if strSliceValue, ok := value.([]string); err == nil && ok {
+	if strSliceValue, ok := value.([]string); err.IsNull() && ok {
 		value = strSliceValue[0]
 	}
-	if strValue, ok := value.(string); err == nil && ok {
+	if strValue, ok := value.(string); err.IsNull() && ok {
 		if iv.required && len(strValue) <= 0 {
-			err = errors.New(fieldName + "'s value is required")
+			err.Msg = "value is required"
 		} else {
-			value, err = strconv.Atoi(strValue)
+			valueTemp, errTemp := strconv.Atoi(strValue)
+			if errTemp != nil {
+				err.Msg = "data type is not int"
+			} else {
+				dataTypeFlag = true
+				value = valueTemp
+			}
 		}
 	}
 	// json中只有float64
-	if float64Value, ok := value.(float64); err == nil && ok {
+	if float64Value, ok := value.(float64); err.IsNull() && ok {
+		dataTypeFlag = true
 		value = int(float64Value)
 	}
-	if intValue, ok := value.(int); err == nil && ok {
+	if intValue, ok := value.(int); err.IsNull() && ok {
+		dataTypeFlag = true
 		if iv.boolMin && intValue <= iv.min {
-			err = errors.New(fieldName + "'s value should > " + strconv.Itoa(iv.min))
+			err.Msg = "value should > " + strconv.Itoa(iv.min)
 		}
-		if err == nil && iv.boolMinE && intValue < iv.minE {
-			err = errors.New(fieldName + "'s value should >= " + strconv.Itoa(iv.minE))
+		if err.IsNull() && iv.boolMinE && intValue < iv.minE {
+			err.Msg = "value should >= " + strconv.Itoa(iv.minE)
 		}
-		if err == nil && iv.boolMax && intValue >= iv.max {
-			err = errors.New(fieldName + "'s value should < " + strconv.Itoa(iv.max))
+		if err.IsNull() && iv.boolMax && intValue >= iv.max {
+			err.Msg = "value should < " + strconv.Itoa(iv.max)
 		}
-		if err == nil && iv.boolMaxE && intValue > iv.maxE {
-			err = errors.New(fieldName + "'s value should <= " + strconv.Itoa(iv.maxE))
+		if err.IsNull() && iv.boolMaxE && intValue > iv.maxE {
+			err.Msg = "value should <= " + strconv.Itoa(iv.maxE)
 		}
-	} else {
-		err = errors.New("data type is not int:" + fieldName)
+	}
+	if !dataTypeFlag && err.IsNull() {
+		err.Msg = "data type is not int"
+	}
+	if err.IsNull() {
+		err = nil
 	}
 	return err
 }

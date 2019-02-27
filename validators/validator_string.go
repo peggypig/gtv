@@ -1,7 +1,7 @@
 package validators
 
 import (
-	"errors"
+	"github.com/peggypig/gtv/gerror"
 	"regexp"
 	"strconv"
 )
@@ -30,43 +30,54 @@ type StringValidator struct {
 }
 
 func (sv *StringValidator) Validator(fieldName string, value interface{}) error {
-	var err error
-	if value == nil {
-		err = errors.New(fieldName + "'s value is nil")
+	var err = &gerror.GError{
+		Key:   fieldName,
+		Value: value,
 	}
-	if strSliceValue, ok := value.([]string); err == nil && ok {
+	if value == nil {
+		err.Msg = "value is nil"
+	}
+	dataTypeFlag := false
+	if strSliceValue, ok := value.([]string); err.IsNull() && ok {
+		dataTypeFlag = true
 		value = strSliceValue[0]
 	}
-	if intSliceValue, ok := value.([]int); err == nil && ok {
+	if intSliceValue, ok := value.([]int); err.IsNull() && ok {
+		dataTypeFlag = true
 		value = strconv.Itoa(intSliceValue[0])
 	}
-	if strValue, ok := value.(string); err == nil && ok {
+	if strValue, ok := value.(string); err.IsNull() && ok {
+		dataTypeFlag = true
 		if sv.required && len(strValue) <= 0 {
-			err = errors.New(fieldName + "'s value is required")
+			err.Msg = "value is required"
 		}
-		if err == nil && sv.boolMinELen && len(strValue) < sv.minELen {
-			err = errors.New(fieldName + "'s value's len should >= " + strconv.Itoa(sv.minELen))
+		if err.IsNull() && sv.boolMinELen && len(strValue) < sv.minELen {
+			err.Msg = "value's len should >= " + strconv.Itoa(sv.minELen)
 		}
-		if err == nil && sv.boolMinLen && len(strValue) <= sv.minELen {
-			err = errors.New(fieldName + "'s value's len should > " + strconv.Itoa(sv.minLen))
+		if err.IsNull() && sv.boolMinLen && len(strValue) <= sv.minELen {
+			err.Msg = "value's len should > " + strconv.Itoa(sv.minLen)
 		}
-		if err == nil && sv.boolMaxELen && len(strValue) > sv.maxELen {
-			err = errors.New(fieldName + "'s value's len should <= " + strconv.Itoa(sv.maxELen))
+		if err.IsNull() && sv.boolMaxELen && len(strValue) > sv.maxELen {
+			err.Msg = "value's len should <= " + strconv.Itoa(sv.maxELen)
 		}
-		if err == nil && sv.boolMaxLen && len(strValue) >= sv.maxLen {
-			err = errors.New(fieldName + "'s value's len should < " + strconv.Itoa(sv.maxLen))
+		if err.IsNull() && sv.boolMaxLen && len(strValue) >= sv.maxLen {
+			err.Msg = "value's len should < " + strconv.Itoa(sv.maxLen)
 		}
-		if err == nil && sv.boolRegexp {
+		if err.IsNull() && sv.boolRegexp {
 			compile, errCompile := regexp.Compile(sv.regexp)
 			if errCompile != nil {
-				err = errCompile
+				err.Msg = errCompile.Error()
 			}
-			if err == nil && !compile.MatchString(strValue) {
-				err = errors.New(fieldName + "'s value is not match rule")
+			if err.IsNull() && !compile.MatchString(strValue) {
+				err.Msg = "value not match rule"
 			}
 		}
-	} else {
-		err = errors.New("data type is not string:" + fieldName)
+	}
+	if !dataTypeFlag && err.IsNull() {
+		err.Msg = "data type is not string"
+	}
+	if err.IsNull() {
+		err = nil
 	}
 	return err
 }

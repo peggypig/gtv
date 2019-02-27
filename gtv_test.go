@@ -195,7 +195,7 @@ func TestTable_FillTable_JSON(t *testing.T) {
 					&ValueField{
 						FieldName: "ClassNo",
 						Validators: []IValidator{
-							NewIntValidator().Max(20).Min(1),
+							NewIntValidator().Max(20).Min(12),
 						},
 					},
 				},

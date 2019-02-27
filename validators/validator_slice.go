@@ -1,7 +1,7 @@
 package validators
 
 import (
-	"errors"
+	"github.com/peggypig/gtv/gerror"
 	"strconv"
 )
 
@@ -27,31 +27,34 @@ type SliceValidator struct {
 }
 
 func (sv *SliceValidator) Validator(fieldName string, value interface{}) error {
-	var err error
+	var err = &gerror.GError{
+		Key:   fieldName,
+		Value: value,
+	}
 	if value == nil {
-		err = errors.New(fieldName + "'s value is nil")
+		err.Msg = "value is nil"
 	}
 	var sliceFlag = false
-	if sliceValue, ok := value.([]interface{}); err == nil && ok {
+	if sliceValue, ok := value.([]interface{}); err.IsNull() && ok {
 		sliceFlag = true
-		if err == nil && sv.required && len(sliceValue) <= 0 {
-			err = errors.New(fieldName + "'s value is required")
+		if err.IsNull() && sv.required && len(sliceValue) <= 0 {
+			err.Msg = "value is required"
 		}
-		if err == nil && sv.boolMinLen && len(sliceValue) <= sv.minLen {
-			err = errors.New(fieldName + "'s value'len should > " + strconv.Itoa(sv.minLen))
+		if err.IsNull() && sv.boolMinLen && len(sliceValue) <= sv.minLen {
+			err.Msg = "value's len should > " + strconv.Itoa(sv.minLen)
 		}
-		if err == nil && sv.boolMinELen && len(sliceValue) < sv.minELen {
-			err = errors.New(fieldName + "'s value'len should >= " + strconv.Itoa(sv.minELen))
+		if err.IsNull() && sv.boolMinELen && len(sliceValue) < sv.minELen {
+			err.Msg = "value's len should >= " + strconv.Itoa(sv.minELen)
 		}
-		if err == nil && sv.boolMaxLen && len(sliceValue) >= sv.maxLen {
-			err = errors.New(fieldName + "'s value'len should < " + strconv.Itoa(sv.maxLen))
+		if err.IsNull() && sv.boolMaxLen && len(sliceValue) >= sv.maxLen {
+			err.Msg = "value's len should < " + strconv.Itoa(sv.maxLen)
 		}
-		if err == nil && sv.boolMaxELen && len(sliceValue) > sv.maxELen {
-			err = errors.New(fieldName + "'s value'len should <= " + strconv.Itoa(sv.maxELen))
+		if err.IsNull() && sv.boolMaxELen && len(sliceValue) > sv.maxELen {
+			err.Msg = "value's len should <= " + strconv.Itoa(sv.maxELen)
 		}
 	}
 	if !sliceFlag {
-		err = errors.New("data type is not slice:" + fieldName)
+		err.Msg = "data type is not slice"
 	}
 	return err
 }
