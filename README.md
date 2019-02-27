@@ -155,6 +155,7 @@ FillTable将http.request传入，表填充器将根据表的FieldName和请求�
     - IntValidator
     - Float64Validator
     - SliceValidator
+    - EnumValidator
 2. 在自带校验器不满足需求时，可以自定义校验器，实现IValidator接口即可。
 3. 表结构支持以下：
     1. 表中嵌套表
