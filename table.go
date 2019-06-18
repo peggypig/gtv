@@ -182,6 +182,7 @@ func getRequestParam(request *http.Request) (param map[string]interface{}, err e
 
 func getFormAndUrlParam(request *http.Request) (param map[string]interface{}, err error) {
 	err = request.ParseForm()
+	param = make(map[string]interface{})
 	for k, _ := range request.Form {
 		param[k] = request.Form[k]
 	}

@@ -204,8 +204,8 @@ func TestTable_FillTable_JSON(t *testing.T) {
 			},
 		},
 	}
-	requestValues, err := table.FillTable(request)
-	err = Validator(table)
+	requestValues, _ := table.FillTable(request)
+	err := Validator(table)
 	assert.Nil(t, err)
 	target := map[string]interface{}{
 		"Name": "zhangSan",
